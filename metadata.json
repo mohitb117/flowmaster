@@ -1,0 +1,6 @@
+{
+  "name": "FlowMaster",
+  "description": "Interactive Android Flows guide explaining StateFlow, SharedFlow, buffers, SharingStarted strategies, visual diagrams, and interview flashcards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
