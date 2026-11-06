@@ -1,3 +1,13 @@
 <resources>
-    <string name="app_name">FlowMaster</string>
+    <string name="app_name">PulseIndex</string>
+    <string name="sp500_title">S&amp;P 500</string>
+    <string name="nasdaq100_title">NASDAQ 100</string>
+    <string name="refresh_quotes">Refresh Quotes</string>
+    <string name="market_open">MKT OPEN</string>
+    <string name="market_closed">MKT CLOSED</string>
+    <string name="pre_market">PRE-MKT</string>
+    <string name="after_hours">AFTER HRS</string>
+    <string name="mode_index_points">Index Points</string>
+    <string name="mode_etf_price">ETF (SPY / QQQ)</string>
+    <string name="ambient_mode_label">AOD Mode</string>
 </resources>

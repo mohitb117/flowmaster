@@ -1,6 +1,6 @@
 {
-  "name": "FlowMaster",
-  "description": "Interactive Android Flows guide explaining StateFlow, SharedFlow, buffers, SharingStarted strategies, visual diagrams, and interview flashcards.",
+  "name": "PulseIndex",
+  "description": "Dedicated Pixel Watch Wear OS app for real-time S&P 500 and Nasdaq 100 market levels, intraday sparklines, and session tracking.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
