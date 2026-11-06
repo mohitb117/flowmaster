@@ -2,6 +2,22 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Brand tech palette for FlowMaster
+val FlowDarkBg = Color(0xFF090D16)
+val FlowDarkSurface = Color(0xFF111827)
+val FlowDarkSurfaceVariant = Color(0xFF1F2937)
+val FlowDarkSurfaceElevated = Color(0xFF263346)
+
+// Neon & Tech accents
+val FlowCyan = Color(0xFF38BDF8)
+val FlowCyanBright = Color(0xFF00E5FF)
+val FlowIndigo = Color(0xFF818CF8)
+val FlowPurple = Color(0xFFA855F7)
+val FlowPink = Color(0xFFF472B6)
+val FlowEmerald = Color(0xFF34D399)
+val FlowAmber = Color(0xFFFBBF24)
+val FlowRose = Color(0xFFFB7185)
+
 // True AMOLED Black & Pixel Watch Obsidian Surfaces
 val WatchOledBlack = Color(0xFF000000)
 val WatchSurfaceDark = Color(0xFF0B111E)

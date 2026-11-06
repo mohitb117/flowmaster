@@ -1,6 +1,6 @@
 {
-  "name": "PulseIndex",
-  "description": "Dedicated Pixel Watch Wear OS app for real-time S&P 500 and Nasdaq 100 market levels, intraday sparklines, and session tracking.",
+  "name": "FlowMaster",
+  "description": "Interactive Android Flows guide with a dedicated Pixel Watch S&P 500 and Nasdaq 100 market companion.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "PulseIndex"
+rootProject.name = "FlowMaster"
 
 include(":app")

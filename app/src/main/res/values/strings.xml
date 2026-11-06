@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PulseIndex</string>
+    <string name="app_name">FlowMaster</string>
     <string name="sp500_title">S&amp;P 500</string>
     <string name="nasdaq100_title">NASDAQ 100</string>
     <string name="refresh_quotes">Refresh Quotes</string>

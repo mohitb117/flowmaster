@@ -36,18 +36,26 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrightnessLow
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Watch
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,6 +66,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.platform.LocalConfiguration
@@ -68,30 +77,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.model.ChartRange
 import com.example.model.WatchScreenDestination
 import com.example.ui.components.WatchCurvedPositionIndicator
 import com.example.ui.components.WatchTopStatusHeader
 import com.example.ui.screens.DualIndexWatchScreen
+import com.example.ui.screens.FlowGuidesAndQuizScreen
+import com.example.ui.screens.FlowSimulatorScreen
 import com.example.ui.screens.SingleIndexDetailWatchScreen
 import com.example.ui.screens.WatchSettingsScreen
+import com.example.ui.theme.FlowCyan
+import com.example.ui.theme.FlowDarkBg
+import com.example.ui.theme.FlowDarkSurface
 import com.example.ui.theme.JetBrainsMonoFontFamily
-import com.example.ui.theme.MarketBearish
 import com.example.ui.theme.MarketBullish
 import com.example.ui.theme.MyApplicationTheme
-import com.example.ui.theme.NasdaqIndigo
 import com.example.ui.theme.OutfitFontFamily
 import com.example.ui.theme.Sp500Cyan
 import com.example.ui.theme.WatchOledBlack
 import com.example.ui.theme.WatchSurfaceCard
 import com.example.ui.theme.WatchSurfaceDark
 import com.example.ui.theme.WatchSurfaceElevated
-import com.example.ui.theme.WatchTextMuted
 import com.example.ui.theme.WatchTextPrimary
 import com.example.ui.theme.WatchTextSecondary
 import com.example.viewmodel.MarketWatchUiState
 import com.example.viewmodel.MarketWatchViewModel
 import kotlin.math.abs
+
+enum class CompanionTab(val title: String, val icon: ImageVector, val tag: String) {
+  WATCH_MARKET("Pixel Watch", Icons.Default.Watch, "tab_watch_market"),
+  SIMULATOR("Flow Sim", Icons.Default.Science, "tab_simulator"),
+  FLASHCARDS("Flow Guide", Icons.Default.CollectionsBookmark, "tab_flashcards")
+}
 
 class MainActivity : ComponentActivity() {
 
@@ -103,7 +119,7 @@ class MainActivity : ComponentActivity() {
     setContent {
       MyApplicationTheme {
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        PulseIndexWatchApp(
+        FlowMasterWithWatchCompanionApp(
           uiState = uiState,
           viewModel = viewModel
         )
@@ -112,13 +128,23 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PulseIndexWatchApp(
+fun FlowMasterWithWatchCompanionApp(
   uiState: MarketWatchUiState,
   viewModel: MarketWatchViewModel
 ) {
-  BackHandler(enabled = uiState.currentDestination != WatchScreenDestination.DUAL_HOME) {
-    viewModel.navigateTo(WatchScreenDestination.DUAL_HOME)
+  var activeTab by remember { mutableStateOf(CompanionTab.WATCH_MARKET) }
+
+  BackHandler(
+    enabled = activeTab != CompanionTab.WATCH_MARKET ||
+      uiState.currentDestination != WatchScreenDestination.DUAL_HOME
+  ) {
+    if (uiState.currentDestination != WatchScreenDestination.DUAL_HOME) {
+      viewModel.navigateTo(WatchScreenDestination.DUAL_HOME)
+    } else {
+      activeTab = CompanionTab.WATCH_MARKET
+    }
   }
 
   val configuration = LocalConfiguration.current
@@ -129,7 +155,7 @@ fun PulseIndexWatchApp(
     color = if (isRoundHardware || !uiState.showWatchBezelInPreview) {
       WatchOledBlack
     } else {
-      Color(0xFF05080F)
+      FlowDarkBg
     }
   ) {
     BoxWithConstraints(
@@ -142,7 +168,7 @@ fun PulseIndexWatchApp(
       val isNativeWatchSize = isRoundHardware || minSide < 290.dp
 
       if (isNativeWatchSize || !uiState.showWatchBezelInPreview) {
-        // Direct edge-to-edge circular Wear OS rendering on Pixel Watch hardware (or full-bleed mode)
+        // Direct edge-to-edge circular Wear OS rendering on Pixel Watch hardware (or Full-Face mode)
         Box(
           modifier = Modifier
             .fillMaxSize()
@@ -156,7 +182,6 @@ fun PulseIndexWatchApp(
           )
 
           if (!isNativeWatchSize) {
-            // Subtle floating button to return to Pixel Watch Bezel frame when testing on phone emulator
             Box(
               modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -175,12 +200,12 @@ fun PulseIndexWatchApp(
               ) {
                 Icon(
                   imageVector = Icons.Default.Watch,
-                  contentDescription = "Show Pixel Watch Hardware Frame",
+                  contentDescription = "Back to FlowMaster Companion",
                   tint = Sp500Cyan,
                   modifier = Modifier.size(15.dp)
                 )
                 Text(
-                  text = "Show Pixel Watch Bezel",
+                  text = "Exit Full Watch Face",
                   fontFamily = OutfitFontFamily,
                   fontWeight = FontWeight.SemiBold,
                   fontSize = 12.sp,
@@ -191,13 +216,130 @@ fun PulseIndexWatchApp(
           }
         }
       } else {
-        // Streaming Emulator Companion View: Renders the true circular Pixel Watch 3 hardware bezel + rotary crown
-        PixelWatchInteractiveShowcase(
-          uiState = uiState,
-          viewModel = viewModel,
-          availableWidth = containerWidth,
-          availableHeight = containerHeight
-        )
+        // Unified FlowMaster + Pixel Watch Market Companion App
+        Scaffold(
+          modifier = Modifier.fillMaxSize(),
+          contentWindowInsets = WindowInsets.safeDrawing,
+          containerColor = FlowDarkBg,
+          topBar = {
+            TopAppBar(
+              title = {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                  Text(
+                    text = "FlowMaster",
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = JetBrainsMonoFontFamily,
+                    fontSize = 18.sp,
+                    color = FlowCyan
+                  )
+                  Box(
+                    modifier = Modifier
+                      .background(Color(0xFF1E293B), shape = RoundedCornerShape(6.dp))
+                      .padding(horizontal = 7.dp, vertical = 3.dp)
+                  ) {
+                    Text(
+                      text = "Pixel Watch Companion",
+                      fontFamily = JetBrainsMonoFontFamily,
+                      fontSize = 10.sp,
+                      color = Sp500Cyan
+                    )
+                  }
+                }
+              },
+              actions = {
+                Box(
+                  modifier = Modifier
+                    .padding(end = 12.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(WatchSurfaceCard)
+                    .border(1.dp, Color(0xFF253248), RoundedCornerShape(10.dp))
+                    .clickable { viewModel.toggleWatchBezelInPreview() }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .testTag("toggle_bezel_mode_button")
+                ) {
+                  Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                  ) {
+                    Icon(
+                      imageVector = Icons.Default.Fullscreen,
+                      contentDescription = "Full Watch Face",
+                      tint = Sp500Cyan,
+                      modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                      text = "Watch Mode",
+                      fontFamily = OutfitFontFamily,
+                      fontWeight = FontWeight.SemiBold,
+                      fontSize = 11.sp,
+                      color = WatchTextPrimary
+                    )
+                  }
+                }
+              },
+              colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = FlowDarkBg,
+                titleContentColor = FlowCyan
+              )
+            )
+          },
+          bottomBar = {
+            NavigationBar(
+              containerColor = FlowDarkSurface,
+              tonalElevation = 8.dp
+            ) {
+              CompanionTab.values().forEach { tab ->
+                val selected = activeTab == tab
+                NavigationBarItem(
+                  selected = selected,
+                  onClick = { activeTab = tab },
+                  icon = {
+                    Icon(
+                      imageVector = tab.icon,
+                      contentDescription = tab.title,
+                      modifier = Modifier.size(20.dp)
+                    )
+                  },
+                  label = {
+                    Text(
+                      text = tab.title,
+                      fontSize = 11.sp,
+                      fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                    )
+                  },
+                  colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color(0xFF0F172A),
+                    selectedTextColor = FlowCyan,
+                    indicatorColor = FlowCyan,
+                    unselectedIconColor = Color(0xFF64748B),
+                    unselectedTextColor = Color(0xFF64748B)
+                  ),
+                  modifier = Modifier.testTag(tab.tag)
+                )
+              }
+            }
+          }
+        ) { innerPadding ->
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(innerPadding)
+          ) {
+            when (activeTab) {
+              CompanionTab.WATCH_MARKET -> PixelWatchInteractiveShowcase(
+                uiState = uiState,
+                viewModel = viewModel,
+                availableWidth = containerWidth,
+                availableHeight = containerHeight - 130.dp
+              )
+              CompanionTab.SIMULATOR -> FlowSimulatorScreen()
+              CompanionTab.FLASHCARDS -> FlowGuidesAndQuizScreen()
+            }
+          }
+        }
       }
     }
   }
@@ -210,101 +352,25 @@ private fun PixelWatchInteractiveShowcase(
   availableWidth: Dp,
   availableHeight: Dp
 ) {
-  val watchOuterSize = min(availableWidth - 44.dp, availableHeight * 0.56f).coerceIn(230.dp, 320.dp)
+  val watchOuterSize = min(availableWidth - 44.dp, availableHeight * 0.68f).coerceIn(220.dp, 310.dp)
 
   Column(
     modifier = Modifier
       .fillMaxSize()
-      .windowInsetsPadding(WindowInsets.safeDrawing)
-      .padding(horizontal = 16.dp, vertical = 10.dp),
+      .padding(horizontal = 16.dp, vertical = 6.dp),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.SpaceBetween
   ) {
-    // Top Header Bar
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-        .widthIn(max = 520.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
-        Box(
-          modifier = Modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(Sp500Cyan.copy(alpha = 0.14f))
-            .border(1.dp, Sp500Cyan.copy(alpha = 0.45f), CircleShape),
-          contentAlignment = Alignment.Center
-        ) {
-          Icon(
-            imageVector = Icons.Default.Watch,
-            contentDescription = "Pixel Watch App",
-            tint = Sp500Cyan,
-            modifier = Modifier.size(17.dp)
-          )
-        }
-        Column {
-          Text(
-            text = "PulseIndex • Pixel Watch",
-            fontFamily = OutfitFontFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            color = WatchTextPrimary
-          )
-          Text(
-            text = "Wear OS Standalone • S&P 500 & Nasdaq 100",
-            fontFamily = JetBrainsMonoFontFamily,
-            fontSize = 10.sp,
-            color = WatchTextSecondary
-          )
-        }
-      }
-
-      // Full-bleed vs Watch Bezel toggle
-      Box(
-        modifier = Modifier
-          .clip(RoundedCornerShape(12.dp))
-          .background(WatchSurfaceCard)
-          .border(1.dp, Color(0xFF253248), RoundedCornerShape(12.dp))
-          .clickable { viewModel.toggleWatchBezelInPreview() }
-          .padding(horizontal = 10.dp, vertical = 6.dp)
-          .testTag("toggle_bezel_mode_button")
-      ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Default.Fullscreen,
-            contentDescription = "Full Screen Watch Face",
-            tint = Sp500Cyan,
-            modifier = Modifier.size(14.dp)
-          )
-          Text(
-            text = "Full Face",
-            fontFamily = OutfitFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp,
-            color = WatchTextPrimary
-          )
-        }
-      }
-    }
-
     // Center: Pixel Watch 3 Circular Case + Interactive Haptic Crown
     Box(
       contentAlignment = Alignment.Center,
-      modifier = Modifier.padding(vertical = 4.dp)
+      modifier = Modifier.padding(vertical = 2.dp)
     ) {
       // Top & Bottom Watch Band Lugs
       Box(
         modifier = Modifier
           .width(watchOuterSize * 0.46f)
-          .height(watchOuterSize + 34.dp)
+          .height(watchOuterSize + 30.dp)
           .clip(RoundedCornerShape(28.dp))
           .background(
             Brush.verticalGradient(
@@ -318,7 +384,7 @@ private fun PixelWatchInteractiveShowcase(
           .border(1.dp, Color(0xFF253042), RoundedCornerShape(28.dp))
       )
 
-      // Right Side Tactile Rotating Crown (Tap or Drag Vertically to Scroll Watch Screens)
+      // Right Side Tactile Rotating Crown
       var crownDragAccumulator by remember { mutableFloatStateOf(0f) }
       Box(
         modifier = Modifier
@@ -359,7 +425,6 @@ private fun PixelWatchInteractiveShowcase(
           .testTag("pixel_watch_crown_button"),
         contentAlignment = Alignment.Center
       ) {
-        // Crown Ridges
         Column(
           verticalArrangement = Arrangement.spacedBy(3.dp),
           horizontalAlignment = Alignment.CenterHorizontally
@@ -375,7 +440,7 @@ private fun PixelWatchInteractiveShowcase(
         }
       }
 
-      // Secondary Side Button above Crown (Returns to Dual Home)
+      // Secondary Side Button above Crown
       Box(
         modifier = Modifier
           .offset(x = (watchOuterSize / 2) + 2.dp, y = (-42).dp)
@@ -391,7 +456,7 @@ private fun PixelWatchInteractiveShowcase(
       Box(
         modifier = Modifier
           .size(watchOuterSize)
-          .shadow(elevation = 20.dp, shape = CircleShape, spotColor = Sp500Cyan)
+          .shadow(elevation = 18.dp, shape = CircleShape, spotColor = Sp500Cyan)
           .clip(CircleShape)
           .background(
             Brush.radialGradient(
@@ -426,7 +491,7 @@ private fun PixelWatchInteractiveShowcase(
       }
     }
 
-    // Bottom Quick Hardware & Screen Controls Strip
+    // Companion Watch Dial Switcher & Status Strip
     Column(
       modifier = Modifier
         .fillMaxWidth()
@@ -437,7 +502,6 @@ private fun PixelWatchInteractiveShowcase(
         .padding(horizontal = 12.dp, vertical = 10.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      // Screen Selector Tabs (Dual Watch / S&P 500 Dial / Nasdaq 100 Dial / Config)
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -479,7 +543,6 @@ private fun PixelWatchInteractiveShowcase(
 
       Spacer(modifier = Modifier.height(8.dp))
 
-      // Live Data Source + Hardware Crown Hint + Quick Actions
       Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -593,7 +656,6 @@ fun PixelWatchCircularFace(
       .testTag("pixel_watch_circular_face"),
     contentAlignment = Alignment.Center
   ) {
-    // Main Watch Dial Content
     AnimatedContent(
       targetState = uiState.currentDestination,
       transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -639,7 +701,6 @@ fun PixelWatchCircularFace(
       }
     }
 
-    // Top Curved Watch Status Header (Time + Market Session + Page Dots)
     WatchTopStatusHeader(
       watchTime = uiState.watchTimeFormatted,
       sessionState = uiState.sessionState,
@@ -651,7 +712,6 @@ fun PixelWatchCircularFace(
         .padding(top = 6.dp)
     )
 
-    // Right-Edge Curved Rotary Scroll Indicator
     WatchCurvedPositionIndicator(
       activeIndex = activePageIndex,
       totalCount = 4,
